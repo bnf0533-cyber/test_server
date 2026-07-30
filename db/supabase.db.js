@@ -7,5 +7,4 @@ try {
     console.log("connect to supabase successfully");
 } catch (error) {
     console.log("failed to connect", error);
-    
 }
