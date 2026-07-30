@@ -1,33 +1,43 @@
 import { client } from "../db/supabase.db.js";
 
-export async function createBudget(body) {
-    try {
-        const newBudget = {
-            unit: "golani",
-            benefitType: "giftCard" | "dininghall",
-            month: "yuly",
-            allocatedAmount: 10,
-        };
-        // אם יש לי כבר כזה דבר צריך 409 לאותו מידע שקיבלתי בבודי
-        return { status: 201, data: "newBudget" };
-    } catch (error) {
-        throw error;
+export async function createBudgetInDb(body) {
+    const { data, error } = await client.from("budget").insert([body]).select();
+    if (error) throw error;
+    return data[0];
+}
+
+export async function getBudgetsFromDb(query) {
+    let supabaseQuery = client.from("budget").select("*");
+    if (query.unit) {
+        supabaseQuery = supabaseQuery.eq("unit", query.unit);
     }
+    if (query.month) {
+        supabaseQuery = supabaseQuery.eq("month", query.month);
+    }
+    if (query.benefitType) {
+        supabaseQuery = supabaseQuery.eq("benefitType", query.benefitType);
+    }
+
+    const { data, error } = await supabaseQuery;
+    if (error) throw error;
+    return data;
 }
 
-export async function getBudgetByQuery(data) {
-    try {
-        const get = await client.from("budget").select("*").eq("something", data);
-        return get;
-        // id , benefitType , month , allocatedAmount , spentAmount , remainingAmount(allocatedAmount  - spentAmount)
-    } catch (error) {}
+export async function getBudgetByIdFromDb(id) {
+    const { data, error } = await client
+        .from("budget")
+        .select("*")
+        .eq("id", id);
+    if (error) throw error;
+    return data;
 }
 
-export async function getAllBudgetById(id) {
-    try {
-        const get = client.from("budget").select("*").eq("id", id);
-        return { data: get, status: 200 }; // אם לא נמצא להחזיר בקומטרולר 404
-    } catch (error) {}
+export async function updateBudgetSpentAmount(id, newSpentAmount) {
+    const { data, error } = await client
+        .from("budget")
+        .update({ spentAmount: newSpentAmount })
+        .eq("id", id)
+        .select();
+    if (error) throw error;
+    return data[0];
 }
-
-
